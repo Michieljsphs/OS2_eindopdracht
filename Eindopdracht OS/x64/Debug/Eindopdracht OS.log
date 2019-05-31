@@ -1,16 +1,2 @@
 ﻿  main.cpp
-C:\Users\michi\OneDrive\Documenten\Gitkraken directory\OS2_eindopdracht\Eindopdracht OS\main.cpp(148): warning C4311: '<function-style-cast>': pointer truncation from '_TCHAR *' to 'int'
-C:\Users\michi\OneDrive\Documenten\Gitkraken directory\OS2_eindopdracht\Eindopdracht OS\main.cpp(148): warning C4302: '<function-style-cast>': truncation from '_TCHAR *' to 'int'
-C:\Users\michi\OneDrive\Documenten\Gitkraken directory\OS2_eindopdracht\Eindopdracht OS\main.cpp(149): warning C4311: '<function-style-cast>': pointer truncation from '_TCHAR *' to 'int'
-C:\Users\michi\OneDrive\Documenten\Gitkraken directory\OS2_eindopdracht\Eindopdracht OS\main.cpp(149): warning C4302: '<function-style-cast>': truncation from '_TCHAR *' to 'int'
-C:\Users\michi\OneDrive\Documenten\Gitkraken directory\OS2_eindopdracht\Eindopdracht OS\main.cpp(150): warning C4311: '<function-style-cast>': pointer truncation from '_TCHAR *' to 'int'
-C:\Users\michi\OneDrive\Documenten\Gitkraken directory\OS2_eindopdracht\Eindopdracht OS\main.cpp(150): warning C4302: '<function-style-cast>': truncation from '_TCHAR *' to 'int'
-C:\Users\michi\OneDrive\Documenten\Gitkraken directory\OS2_eindopdracht\Eindopdracht OS\main.cpp(151): warning C4311: '<function-style-cast>': pointer truncation from '_TCHAR *' to 'int'
-C:\Users\michi\OneDrive\Documenten\Gitkraken directory\OS2_eindopdracht\Eindopdracht OS\main.cpp(151): warning C4302: '<function-style-cast>': truncation from '_TCHAR *' to 'int'
-C:\Users\michi\OneDrive\Documenten\Gitkraken directory\OS2_eindopdracht\Eindopdracht OS\main.cpp(152): warning C4311: '<function-style-cast>': pointer truncation from '_TCHAR *' to 'int'
-C:\Users\michi\OneDrive\Documenten\Gitkraken directory\OS2_eindopdracht\Eindopdracht OS\main.cpp(152): warning C4302: '<function-style-cast>': truncation from '_TCHAR *' to 'int'
-main.obj : error LNK2019: unresolved external symbol "public: static unsigned long __cdecl Queue::input(void *)" (?input@Queue@@SAKPEAX@Z) referenced in function main
-main.obj : error LNK2019: unresolved external symbol "public: static unsigned long __cdecl Queue::treble(void *)" (?treble@Queue@@SAKPEAX@Z) referenced in function main
-main.obj : error LNK2019: unresolved external symbol "public: static unsigned long __cdecl Queue::bass(void *)" (?bass@Queue@@SAKPEAX@Z) referenced in function main
-main.obj : error LNK2019: unresolved external symbol "public: static unsigned long __cdecl Queue::output(void *)" (?output@Queue@@SAKPEAX@Z) referenced in function main
-C:\Users\michi\OneDrive\Documenten\Gitkraken directory\OS2_eindopdracht\Eindopdracht OS\x64\Debug\Eindopdracht OS.exe : fatal error LNK1120: 4 unresolved externals
+  Eindopdracht OS.vcxproj -> C:\Users\michi\OneDrive\Documenten\Gitkraken directory\OS2_eindopdracht\Eindopdracht OS\x64\Debug\Eindopdracht OS.exe
