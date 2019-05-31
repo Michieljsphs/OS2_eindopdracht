@@ -1,20 +1,17 @@
 #include <iostream>
-
+#include <fstream>
 #include <stdlib.h>
 #include <windows.h>
 #include <stdio.h>
 #include <tchar.h>
 #include <time.h>
 #include <thread>
-//#include "Queue.h"
-//#include "Block.h"
-//#include "Audio.h"
 
 using namespace std;
 void bassCoefficients(int intensity, double* b0, double* b1, double* b2, double* a1, double* a2);
 void trebleCoefficients(int intensity, double* b0, double* b1, double* b2, double* a1, double* a2);
 const int BUFLEN = 5; // aantal in de queue
-//void inputFile();
+
 
 class Block
 {
@@ -139,16 +136,13 @@ public:
 		return block;
 	}
 
-	static unsigned long __stdcall input(void* pVoid);
-	static unsigned long __stdcall treble(void* pVoid);
-	static unsigned long __stdcall bass(void* pVoid);
-	static unsigned long __stdcall output(void* pVoid);
+	//static unsigned long __stdcall input(void* pVoid);
+	//static unsigned long __stdcall treble(void* pVoid);
+	//static unsigned long __stdcall bass(void* pVoid);
+	//static unsigned long __stdcall output(void* pVoid);
 };
 
 Queue queue;
-
-unsigned long __stdcall function(void*)
-{}
 
 int _tmain(int argc, _TCHAR* argv[]){
 	int p = int(argv[0]);	// number of threads
@@ -157,16 +151,17 @@ int _tmain(int argc, _TCHAR* argv[]){
 	int inputFile = int(argv[3]);
 	int outputFile = int(argv[4]);
 
-	CreateThread(0, 0, /*Queue::input*/ Queue::function, LPVOID("Input1"), 0, 0);
-	//	CreateThread(0, 0, queue.treble, LPVOID("Treble1"), 0, 0);
-	//	CreateThread(0, 0, queue.bass, LPVOID("Bass1"), 0, 0);
-	//	CreateThread(0, 0, queue.output, LPVOID("Output1"), 0, 0);
+	//CreateThread(0, 0, /*Queue::input*/ Queue::function, LPVOID("Input1"), 0, 0);
+		CreateThread(0, 0, queue.input, LPVOID("Input1"), 0, 0);
+		CreateThread(0, 0, queue.treble, LPVOID("Treble1"), 0, 0);
+		CreateThread(0, 0, queue.bass, LPVOID("Bass1"), 0, 0);
+		CreateThread(0, 0, queue.output, LPVOID("Output1"), 0, 0);
 
-	std::thread *thread[4];
-	thread[0] = new std::thread(&Queue::input);
-	thread[1] = new std::thread(&Queue::treble);
-	thread[2] = new std::thread(&Queue::bass);
-	thread[3] = new std::thread(&Queue::output);
+	//std::thread *thread[4];
+	//thread[0] = new std::thread(&Queue::input);
+	//thread[1] = new std::thread(&Queue::treble);
+	//thread[2] = new std::thread(&Queue::bass);
+	//thread[3] = new std::thread(&Queue::output);
 	
 	
 	// Druk op een toets om af te breken...
