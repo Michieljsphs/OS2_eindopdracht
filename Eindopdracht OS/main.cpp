@@ -6,15 +6,144 @@
 #include <tchar.h>
 #include <time.h>
 #include <thread>
-#include "Queue.h"
-#include "Block.h"
+//#include "Queue.h"
+//#include "Block.h"
 //#include "Audio.h"
 
 using namespace std;
 void bassCoefficients(int intensity, double* b0, double* b1, double* b2, double* a1, double* a2);
 void trebleCoefficients(int intensity, double* b0, double* b1, double* b2, double* a1, double* a2);
-void inputFile();
+const int BUFLEN = 5; // aantal in de queue
+//void inputFile();
 
+class Block
+{
+public:
+	Block() {
+		orderNr = 0;
+		for (int i = 0; i < 1024; i++) sample[i] = 0;
+	}
+
+	signed int orderNr;
+	signed short sample[1024];
+};
+
+class Queue
+{
+private:
+	Block* buffer[BUFLEN];
+	// Audio audio;
+	// Twee indexen en de lengte bijhouden.
+	// Redundant, maar lekker makkelijk!
+	int treblePos, bassPos, outputPos, inputPos;
+	int count;
+	signed short sample;
+	// Deze sync-dingen moet je gaan gebruiken in get() en put()
+	CRITICAL_SECTION busy;
+	HANDLE canTreble, canBass, canOutput, canInput;
+
+public:
+	Queue() {
+		// Hier worden ze goed geinitialiseerd
+		InitializeCriticalSection(&busy);
+		canTreble = CreateEvent(0, 0, 0, 0);
+		canBass = CreateEvent(0, 0, 0, 0);
+		canOutput = CreateEvent(0, 0, 0, 0);
+		sample = 0;
+		inputPos = 0;
+		treblePos = 0;
+		bassPos = 0;
+		outputPos = 0;
+		count = 0;
+		//for (int i = 0; i < BUFLEN; i++) buffer[i] = 0;
+	}
+
+	Block* input() {
+		EnterCriticalSection(&busy);
+		while (count == 1) {
+			LeaveCriticalSection(&busy);
+			WaitForSingleObject(canInput, INFINITE);
+			EnterCriticalSection(&busy);
+		}
+		//audio.inputFile();
+		Block* block = new Block;
+		int i = 0;
+		std::ifstream file("you_and_i.pcm", ios::binary);
+		while (file.good() && i < 1024) {
+			file.read((char*)sample, sizeof(sample));
+			block->sample[i] = sample;
+			i++;
+		}
+		block->orderNr = inputPos;
+		buffer[inputPos] = new Block;
+		buffer[inputPos] = block;
+		treblePos = (inputPos + 1) % BUFLEN;
+		//count--;
+		SetEvent(canTreble);	// set next step
+		ResetEvent(canInput);	// reset current step
+		LeaveCriticalSection(&busy);
+
+		return block;
+	}
+
+	Block* treble(Block* block) {
+		EnterCriticalSection(&busy);
+		while (count == 1) {
+			LeaveCriticalSection(&busy);
+			WaitForSingleObject(canTreble, INFINITE);
+			EnterCriticalSection(&busy);
+		}
+
+		block = buffer[treblePos];
+
+		bassPos = (treblePos + 1) % BUFLEN;
+		count--;
+		SetEvent(canBass);	// set next step
+		ResetEvent(canTreble);	// reset current step
+		LeaveCriticalSection(&busy);
+
+		return block;
+	}
+	Block* bass(Block* block) {
+		EnterCriticalSection(&busy);
+		while (count == 1) {
+			LeaveCriticalSection(&busy);
+			WaitForSingleObject(canBass, INFINITE);
+			EnterCriticalSection(&busy);
+		}
+
+		block = buffer[bassPos];
+		outputPos = (bassPos + 1) % BUFLEN;
+		count--;
+		SetEvent(canOutput);	// set next step	
+		ResetEvent(canBass);	// reset current step
+		LeaveCriticalSection(&busy);
+
+		return block;
+	}
+	Block* output(Block* block) {
+		EnterCriticalSection(&busy);
+		while (count == 1) {
+			LeaveCriticalSection(&busy);
+			WaitForSingleObject(canOutput, INFINITE);
+			EnterCriticalSection(&busy);
+		}
+
+		block = buffer[outputPos];
+		inputPos = (outputPos + 1) % BUFLEN;
+		count--;
+		SetEvent(canInput);	// set next step (input, because the queue is smaller
+		ResetEvent(canOutput);	// reset current step
+		LeaveCriticalSection(&busy);
+
+		return block;
+	}
+
+	static unsigned long __stdcall input(void* pVoid);
+	static unsigned long __stdcall treble(void* pVoid);
+	static unsigned long __stdcall bass(void* pVoid);
+	static unsigned long __stdcall output(void* pVoid);
+};
 
 Queue queue;
 
