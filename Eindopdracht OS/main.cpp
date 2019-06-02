@@ -7,6 +7,7 @@
 #include <time.h>
 #include <thread>
 #include <math.h>
+#include <string>
 
 FILE* filepoint;
 
@@ -346,15 +347,58 @@ FILE* inputFile()
 
 
 int _tmain(int argc, _TCHAR* argv[]){
+	int amountOfThreads = 0, lowFrequencySetting = 0, highFrequencySetting = 0;
+	string inputLocation = "temp1", outputLocation = "temp2";
+	int fileCounter = 0;
+
+
+	for (int argcCount = 1; argcCount < argc; argcCount++) {
+		std::string argvStr = argv[argcCount];
+		const char* str = argv[argcCount];
+
+
+		cout << argcCount << " - " << endl;
+		printf("%s\n", argvStr.c_str());
+		std::size_t found;
+		if (argvStr.find("-p") == 0) {
+
+			found = argvStr.find(":");
+			amountOfThreads = stoi(argvStr.substr((found + 1), argvStr.size()));
+		}
+		else if (argvStr.find("-b") == 0) {
+			found = argvStr.find(":");
+			lowFrequencySetting = stoi(argvStr.substr((found + 1), argvStr.size()));
+		}
+		else if (argvStr.find("-t") == 0) {
+			found = argvStr.find(":");
+			highFrequencySetting = stoi(argvStr.substr((found + 1), argvStr.size()));
+		}
+		else if (argvStr.find(".") != std::string::npos) {
+			if (fileCounter < 1) {
+				inputLocation = argvStr;
+			}
+			else if (fileCounter < 2) {
+				outputLocation = argvStr;
+			}
+			else {
+				//error
+			}
+			fileCounter++;
+		}
+		else {
+			cout << "Parameter" << endl;
+		}
+	}
+	cout << amountOfThreads << " " << lowFrequencySetting << " " << highFrequencySetting << " " << inputLocation << " " << outputLocation << endl;
+
 	FILE * filepoint = inputFile();
-	//getBlock(filepoint, 50);
-	_TCHAR p = 2;// *argv[0];	// number of threads
-	_TCHAR b = 2;// *argv[1];	// bass intensity
-	_TCHAR t = 1;// *argv[2];	// treble intensity
+
+	_TCHAR threads = amountOfThreads;// *argv[0];	// number of threads
+	_TCHAR basslv = lowFrequencySetting;// *argv[1];	// bass intensity
+	_TCHAR treblelv = highFrequencySetting;// *argv[2];	// treble intensity
 	//_TCHAR inputFile = *argv[3];
 	//_TCHAR outputFile = *argv[4];
-	int threads = 3;
-	calculateCoefficients(b, t);
+	calculateCoefficients(basslv, treblelv);
 
 	for (int i = 0; i < threads; i++) {
 		CreateThread(0, 0, input, nullptr, 0, 0);
