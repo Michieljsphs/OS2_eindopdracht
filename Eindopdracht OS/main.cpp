@@ -15,7 +15,7 @@ using namespace std;
 const int BUFLEN = 5; // aantal in de queue
 double bb0, bb1, bb2, ba1, ba2;
 double tb0 , tb1, tb2, ta1, ta2;
-
+int fileSize;
 
 
 void bassCoefficients(int intensity, double* b0, double* b1, double* b2, double* a1, double* a2)
@@ -66,23 +66,22 @@ public:
 	Block() {
 		orderNr = 0;
 		for (int i = 0; i < 1024; i++) {
-			sample[i] = new signed short;
-			*sample[i] = 0;
+			//sample[i] = new signed short;
+			sample[i] = 0;
 		}
 	}
 	~Block() {
-		delete[] sample;
+		
 	}
 	signed int orderNr;
-	signed short *sample[1024];
+	signed short sample[1024];
 };
 
 Block* getBlock(FILE* filepoint, int blockNr, Block *block)
 {
-
+	int size = fileSize;
 	// File was opened, filepoint can be used to read the stream.
-	fseek(filepoint, 0, SEEK_END);
-	int size = ftell(filepoint);
+	
 	fseek(filepoint, 0, SEEK_SET);
 	uint16_t* buf = (uint16_t*)malloc(size);
 	signed short* f = (signed short*)malloc(size * sizeof(signed short) / 2);
@@ -120,34 +119,36 @@ Block* getBlock(FILE* filepoint, int blockNr, Block *block)
 	}
 
 	//cout << blockBuf[50] << endl;
-	for (int i = 0; i < 1024; i++) *block->sample[i] = blockBuf[i];
+	for (int i = 0; i < 1024; i++) block->sample[i] = blockBuf[i];
 	//cout << *block->sample[50];
 	free(blockBuf);
 	free(f);
+	free(buf);
 	return block;
 }
 
 
-void equalizer(signed short *x[1024], char channel) {
+void equalizer(signed short x[1024], char channel) {
 	signed short y[1024];
 	if (channel == 't') {
 		for (int n = 2; n < 1024; n++) {
-			//y[n] = x[n];
-			y[n] = tb0 * *x[n] + tb1 * *x[n - 1] + tb2 * *x[n - 2] + ta1 * y[n - 1] + ta2 * y[n - 2];
+			// Formule die waarden toepast
+			y[n] = tb0 * x[n] + tb1 * x[n - 1] + tb2 * x[n - 2] + ta1 * y[n - 1] + ta2 * y[n - 2];
 		}
 	}
 	else if (channel == 'b') {
 		for (int n = 2; n < 1024; n++) {
-			//y[n] = x[n];
-			y[n] = bb0 * *x[n] + bb1 * *x[n - 1] + bb2 * *x[n - 2] + ba1 * y[n - 1] + ba2 * y[n - 2];
+			// Formule die waarden toepast
+			y[n] = bb0 * x[n] + bb1 * x[n - 1] + bb2 * x[n - 2] + ba1 * y[n - 1] + ba2 * y[n - 2];
 		}
 	}
-	*x = y;
+	x = y;
 }
 
 class Queue
 {
 private:
+	// vier buffers waarin de rij is opgeslagen
 	Block inputBuffer[BUFLEN];
 	Block trebleBuffer[BUFLEN];
 	Block bassBuffer[BUFLEN];
@@ -280,7 +281,7 @@ public:
 		outputPos = (outputPos + 1) % BUFLEN;
 		countBass--;
 		//countOutput++;
-		cout << "block ordernummer:  " << block->orderNr << "  block sample: " << *block->sample[2] << endl;
+		cout << "block ordernummer:  " << block->orderNr << "  block sample: " << block->sample[2] << endl;
 		SetEvent(canInput);	// set next step (input, because the queue is smaller
 		ResetEvent(canOutput);	// reset current step
 		delete block;
@@ -346,6 +347,8 @@ FILE* inputFile(string inputLocation)
 	else {
 		std::cout << "open file" << std::endl;;
 	}
+	fseek(filepoint, 0, SEEK_END);
+	fileSize = ftell(filepoint) * 10;
 	return filepoint;
 }
 
@@ -394,10 +397,10 @@ int _tmain(int argc, _TCHAR* argv[]){
 		}
 	}
 	cout << amountOfThreads << " " << lowFrequencySetting << " " << highFrequencySetting << " " << inputLocation << " " << outputLocation << endl;
-
+	inputLocation = "you_and_i.pcm";
 	FILE * filepoint = inputFile(inputLocation);
 
-	_TCHAR threads = 4;// amountOfThreads;// *argv[0];	// number of threads
+	_TCHAR threads = 10;// amountOfThreads;// *argv[0];	// number of threads
 	_TCHAR basslv = lowFrequencySetting;// *argv[1];	// bass intensity
 	_TCHAR treblelv = highFrequencySetting;// *argv[2];	// treble intensity
 	//_TCHAR inputFile = *argv[3];
@@ -412,6 +415,7 @@ int _tmain(int argc, _TCHAR* argv[]){
 	}
 
 	// Druk op een toets om af te breken...
+	//delete(queue);
 	cin.get();
 	return 0;
 }
