@@ -74,7 +74,7 @@ public:
 	signed short *sample[1024];
 };
 
-Block* getBlock(FILE* filepoint, int blockNr)
+Block* getBlock(FILE* filepoint, int blockNr, Block *block)
 {
 
 	// File was opened, filepoint can be used to read the stream.
@@ -93,7 +93,7 @@ Block* getBlock(FILE* filepoint, int blockNr)
 	// creates the block
 	int beginBuf = blockNr * 1024;			// the begin index for the new block
 	int endBuf = (blockNr + 1) * 1024 - 1;	// the last index for the new block
-	std::cout << beginBuf << " - " << endBuf << std::endl;
+	//std::cout << beginBuf << " - " << endBuf << std::endl;
 
 	int newBufIndex = 0;
 	signed short* blockBuf = (signed short*)malloc(size);
@@ -117,9 +117,9 @@ Block* getBlock(FILE* filepoint, int blockNr)
 	}
 
 	//cout << blockBuf[50] << endl;
-	Block* block = new Block;
 	for (int i = 0; i < 1024; i++) *block->sample[i] = blockBuf[i];
 	//cout << *block->sample[50];
+	delete buf;
 	return block;
 }
 
@@ -128,14 +128,14 @@ void equalizer(signed short x[1024], char channel) {
 	signed short y[1024];
 	if (channel == 't') {
 		for (int n = 2; n < 1024; n++) {
-			//y[n] = new signed short;
-			y[n] = signed short(tb0 * x[n] + tb1 * x[n - 1] + tb2 * x[n - 2] + ta1 * y[n - 1] + ta2 * y[n - 2]);
+			//y[n] = x[n];
+			y[n] = tb0 * x[n] + tb1 * x[n - 1] + tb2 * x[n - 2] + ta1 * y[n - 1] + ta2 * y[n - 2];
 		}
 	}
 	else if (channel == 'b') {
 		for (int n = 2; n < 1024; n++) {
-			//y[n] = new signed short;
-			y[n] = signed short(bb0 * x[n] + bb1 * x[n - 1] + bb2 * x[n - 2] + ba1 * y[n - 1] + ba2 * y[n - 2]);
+			//y[n] = x[n];
+			y[n] = bb0 * x[n] + bb1 * x[n - 1] + bb2 * x[n - 2] + ba1 * y[n - 1] + ba2 * y[n - 2];
 		}
 	}
 	x = y;
@@ -144,10 +144,10 @@ void equalizer(signed short x[1024], char channel) {
 class Queue
 {
 private:
-	Block* inputBuffer[BUFLEN];
-	Block* trebleBuffer[BUFLEN];
-	Block* bassBuffer[BUFLEN];
-	Block* outputBuffer[BUFLEN];
+	Block inputBuffer[BUFLEN];
+	Block trebleBuffer[BUFLEN];
+	Block bassBuffer[BUFLEN];
+	Block outputBuffer[BUFLEN];
 	// Twee indexen en de lengte bijhouden.
 	// Redundant, maar lekker makkelijk!
 	int treblePos, bassPos, outputPos, inputPos;
@@ -177,20 +177,21 @@ public:
 
 	void input() {
 		EnterCriticalSection(&busy);
-		while (countInput == 4) { // waiting till there is room
-			//cout << "waiting for input room" << endl;
+		while (countInput == (BUFLEN - 1)) { // waiting till there is room
 			LeaveCriticalSection(&busy);
 			WaitForSingleObject(canInput, INFINITE);
 			EnterCriticalSection(&busy);
 		}
-		Block *block = getBlock(filepoint, orderCount);
+		Block* block = new Block;
+		block = getBlock(filepoint, orderCount, block);
+
 		block->orderNr = orderCount; // om de positie van het block in het geluidsfragment te onthouden
 		orderCount++;
-		cout << "input block created" << endl;
+		cout << "INPUT " << block->orderNr << endl;
 		
 		// stop block in de buffer op de plek van treblePos
-		trebleBuffer[inputPos] = block;
-
+		trebleBuffer[inputPos] = *block;
+		delete block;
 		// inputPos aanpassen
 		inputPos = (inputPos + 1) % BUFLEN;
 		
@@ -205,25 +206,23 @@ public:
 	void treble() {
 		EnterCriticalSection(&busy);
 		while (countInput == 0) { // waiting for object
-			cout << "waiting for TREBLE object" << endl;
+			cout << "TREBLE wait" << endl;
 			LeaveCriticalSection(&busy);
 			WaitForSingleObject(canTreble, INFINITE);
 			EnterCriticalSection(&busy);
 		}
-		cout << "TREBLE object created" << endl;
+		
 		Block* block = new Block;
-		block = trebleBuffer[treblePos];
+		*block = trebleBuffer[treblePos];
 
+		cout << "TREBLE " << block->orderNr << endl;
 		// VOER TREBLE SHIT UIT -------
-		signed short* x[1024];
-		*x = *block->sample;
-		equalizer(*x, 't');
-		
-		*block->sample = *x;
+		equalizer(*block->sample, 't');
 
-		bassBuffer[treblePos] = block; // stop blok op de plek van bassPos
+		bassBuffer[treblePos] = *block; // stop blok op de plek van bassPos
 		treblePos = (treblePos + 1) % BUFLEN;
-		
+
+		delete block;
 		countInput--;
 		countTreble++;
 		SetEvent(canBass);	// set next step
@@ -235,25 +234,22 @@ public:
 	void bass() {
 		EnterCriticalSection(&busy);
 		while (countTreble == 0) {
-			cout << "waiting for BASS object" << endl;
+			cout << "BASS wait" << endl;
 			LeaveCriticalSection(&busy);
 			WaitForSingleObject(canBass, INFINITE);
 			EnterCriticalSection(&busy);
 		}
-		cout << "BASS object created" << endl;
 		Block* block = new Block;
-		block = bassBuffer[bassPos];
+		*block = bassBuffer[bassPos];
+		cout << "BASS " << block->orderNr << endl;
 
 		// voer BASS shit uit ------
-		signed short* x[1024];
-		*x = *block->sample;
-		equalizer(*x, 'b');
+		equalizer(*block->sample, 'b');
 
-		*block->sample = *x;
-
-		outputBuffer[bassPos] = block; // stop block in buffer op plek van outputPos
+		outputBuffer[bassPos] = *block;
 		bassPos = (bassPos + 1) % BUFLEN;
 
+		delete block;
 		countTreble--;
 		countBass++;
 
@@ -266,15 +262,15 @@ public:
 	void output() {
 		EnterCriticalSection(&busy);
 		while (countBass == 0) {
-			cout << "waiting for output object" << endl;
+			cout << "OUTPUT wait" << endl;
 			LeaveCriticalSection(&busy);
 			WaitForSingleObject(canOutput, INFINITE);
 			EnterCriticalSection(&busy);
 		}
-		cout << "output object created" << endl;
+		
 		Block* block = new Block;
-		block = outputBuffer[outputPos];
-
+		*block = outputBuffer[outputPos];
+		cout << "OUTPUT " << block->orderNr << endl;
 		// OUTPUT SCHRIJVEN
 
 		outputPos = (outputPos + 1) % BUFLEN;
@@ -283,6 +279,7 @@ public:
 		cout << "block ordernummer:  " << block->orderNr << "  block sample: " << *block->sample[2] << endl;
 		SetEvent(canInput);	// set next step (input, because the queue is smaller
 		ResetEvent(canOutput);	// reset current step
+		delete block;
 		LeaveCriticalSection(&busy);
 
 
@@ -353,17 +350,19 @@ int _tmain(int argc, _TCHAR* argv[]){
 	//getBlock(filepoint, 50);
 	_TCHAR p = 2;// *argv[0];	// number of threads
 	_TCHAR b = 2;// *argv[1];	// bass intensity
-	_TCHAR t = 2;// *argv[2];	// treble intensity
+	_TCHAR t = 1;// *argv[2];	// treble intensity
 	//_TCHAR inputFile = *argv[3];
 	//_TCHAR outputFile = *argv[4];
-	
+	int threads = 3;
 	calculateCoefficients(b, t);
 
-	CreateThread(0, 0, input, nullptr, 0, 0);
-	CreateThread(0, 0, treble, nullptr, 0, 0);
-	CreateThread(0, 0, bass, nullptr, 0, 0);
-	CreateThread(0, 0, output, nullptr, 0, 0);
-	
+	for (int i = 0; i < threads; i++) {
+		CreateThread(0, 0, input, nullptr, 0, 0);
+		CreateThread(0, 0, treble, nullptr, 0, 0);
+		CreateThread(0, 0, bass, nullptr, 0, 0);
+		CreateThread(0, 0, output, nullptr, 0, 0);
+	}
+
 	// Druk op een toets om af te breken...
 	cin.get();
 	return 0;
