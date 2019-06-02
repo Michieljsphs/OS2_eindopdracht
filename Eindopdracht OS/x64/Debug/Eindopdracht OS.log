@@ -1,4 +1,5 @@
 ﻿  main.cpp
-C:\Users\michi\OneDrive\Documenten\Gitkraken directory\OS2_eindopdracht\Eindopdracht OS\main.cpp(133): warning C4244: '=': conversion from 'double' to 'short', possible loss of data
-C:\Users\michi\OneDrive\Documenten\Gitkraken directory\OS2_eindopdracht\Eindopdracht OS\main.cpp(139): warning C4244: '=': conversion from 'double' to 'short', possible loss of data
+C:\Users\michi\OneDrive\Documenten\Gitkraken directory\OS2_eindopdracht\Eindopdracht OS\main.cpp(74): warning C4154: deletion of an array expression; conversion to pointer supplied
+C:\Users\michi\OneDrive\Documenten\Gitkraken directory\OS2_eindopdracht\Eindopdracht OS\main.cpp(136): warning C4244: '=': conversion from 'double' to 'short', possible loss of data
+C:\Users\michi\OneDrive\Documenten\Gitkraken directory\OS2_eindopdracht\Eindopdracht OS\main.cpp(142): warning C4244: '=': conversion from 'double' to 'short', possible loss of data
   Eindopdracht OS.vcxproj -> C:\Users\michi\OneDrive\Documenten\Gitkraken directory\OS2_eindopdracht\Eindopdracht OS\x64\Debug\Eindopdracht OS.exe

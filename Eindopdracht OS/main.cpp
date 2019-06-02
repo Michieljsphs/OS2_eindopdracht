@@ -70,7 +70,9 @@ public:
 			*sample[i] = 0;
 		}
 	}
-
+	~Block() {
+		delete[] sample;
+	}
 	signed int orderNr;
 	signed short *sample[1024];
 };
@@ -120,26 +122,27 @@ Block* getBlock(FILE* filepoint, int blockNr, Block *block)
 	//cout << blockBuf[50] << endl;
 	for (int i = 0; i < 1024; i++) *block->sample[i] = blockBuf[i];
 	//cout << *block->sample[50];
-	delete buf;
+	free(blockBuf);
+	free(f);
 	return block;
 }
 
 
-void equalizer(signed short x[1024], char channel) {
+void equalizer(signed short *x[1024], char channel) {
 	signed short y[1024];
 	if (channel == 't') {
 		for (int n = 2; n < 1024; n++) {
 			//y[n] = x[n];
-			y[n] = tb0 * x[n] + tb1 * x[n - 1] + tb2 * x[n - 2] + ta1 * y[n - 1] + ta2 * y[n - 2];
+			y[n] = tb0 * *x[n] + tb1 * *x[n - 1] + tb2 * *x[n - 2] + ta1 * y[n - 1] + ta2 * y[n - 2];
 		}
 	}
 	else if (channel == 'b') {
 		for (int n = 2; n < 1024; n++) {
 			//y[n] = x[n];
-			y[n] = bb0 * x[n] + bb1 * x[n - 1] + bb2 * x[n - 2] + ba1 * y[n - 1] + ba2 * y[n - 2];
+			y[n] = bb0 * *x[n] + bb1 * *x[n - 1] + bb2 * *x[n - 2] + ba1 * y[n - 1] + ba2 * y[n - 2];
 		}
 	}
-	x = y;
+	*x = y;
 }
 
 class Queue
@@ -218,7 +221,7 @@ public:
 
 		cout << "TREBLE " << block->orderNr << endl;
 		// VOER TREBLE SHIT UIT -------
-		equalizer(*block->sample, 't');
+		equalizer(block->sample, 't');
 
 		bassBuffer[treblePos] = *block; // stop blok op de plek van bassPos
 		treblePos = (treblePos + 1) % BUFLEN;
@@ -245,7 +248,7 @@ public:
 		cout << "BASS " << block->orderNr << endl;
 
 		// voer BASS shit uit ------
-		equalizer(*block->sample, 'b');
+		equalizer(block->sample, 'b');
 
 		outputBuffer[bassPos] = *block;
 		bassPos = (bassPos + 1) % BUFLEN;
@@ -327,17 +330,18 @@ void calculateCoefficients(int bassIntensity, int trebleIntensity) {
 	trebleCoefficients(trebleIntensity, &tb0, &tb1, &tb2, &ta1, &ta2);
 }
 
-FILE* inputFile()
+FILE* inputFile(string inputLocation)
 {
 	errno_t err;
 
-
-	if ((err = fopen_s(&filepoint, "you_and_i.pcm", "r")) != 0) { // open the file
-		// File could not be opened. filepoint was set to NULL
-		// error code is returned in err.
-		// error message can be retrieved with strerror(err);
-		fprintf(stderr, "cannot open file '%s': %s\n",
-			"you_and_i.pcm", strerror(err));
+	//you_and_i.pcm
+	//inputLocation = "you_and_i.pcm";
+	if ((err = fopen_s(&filepoint, inputLocation.c_str() , "r")) != 0) { // open the file
+	// File could not be opened. filepoint was set to NULL
+	// error code is returned in err.
+	// error message can be retrieved with strerror(err);
+	fprintf(stderr, "cannot open file '%s': %s\n",
+		"you_and_i.pcm", strerror(err));
 	}
 	else {
 		std::cout << "open file" << std::endl;;
@@ -391,9 +395,9 @@ int _tmain(int argc, _TCHAR* argv[]){
 	}
 	cout << amountOfThreads << " " << lowFrequencySetting << " " << highFrequencySetting << " " << inputLocation << " " << outputLocation << endl;
 
-	FILE * filepoint = inputFile();
+	FILE * filepoint = inputFile(inputLocation);
 
-	_TCHAR threads = amountOfThreads;// *argv[0];	// number of threads
+	_TCHAR threads = 4;// amountOfThreads;// *argv[0];	// number of threads
 	_TCHAR basslv = lowFrequencySetting;// *argv[1];	// bass intensity
 	_TCHAR treblelv = highFrequencySetting;// *argv[2];	// treble intensity
 	//_TCHAR inputFile = *argv[3];
