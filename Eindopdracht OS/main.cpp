@@ -10,13 +10,17 @@
 #include <string>
 
 FILE* filepoint;
+FILE* outputfilepoint; 
+signed short* outputBuf;
 
+bool runningFlag = 1;
 using namespace std;
 const int BUFLEN = 5; // aantal in de queue
 double bb0, bb1, bb2, ba1, ba2;
 double tb0 , tb1, tb2, ta1, ta2;
 int fileSize;
-
+int outputOrder = 0;
+int blockAmount = 0;
 
 void bassCoefficients(int intensity, double* b0, double* b1, double* b2, double* a1, double* a2)
 {
@@ -77,17 +81,40 @@ public:
 	signed short sample[1024];
 };
 
+
+
+FILE* inputFile(string inputLocation)
+{
+	errno_t err;
+
+	//you_and_i.pcm
+	//inputLocation = "you_and_i.pcm";
+	if ((err = fopen_s(&filepoint, inputLocation.c_str(), "r")) != 0) { // open the file
+	// File could not be opened. filepoint was set to NULL
+	// error code is returned in err.
+	// error message can be retrieved with strerror(err);
+		fprintf(stderr, "cannot open file '%s': %s\n",
+			"you_and_i.pcm", strerror(err));
+	}
+	else {
+		std::cout << "open file" << std::endl;;
+	}
+	fseek(filepoint, 0, SEEK_END);
+	fileSize = ftell(filepoint) / 2;
+	return filepoint;
+}
+
 Block* getBlock(FILE* filepoint, int blockNr, Block *block)
 {
 	int size = fileSize;
 	// File was opened, filepoint can be used to read the stream.
 	
 	fseek(filepoint, 0, SEEK_SET);
-	uint16_t* buf = (uint16_t*)malloc(size);
-	signed short* f = (signed short*)malloc(size * sizeof(signed short) / 2);
+	int16_t* buf = (int16_t*)malloc(size);
+	signed short* f = (signed short*)malloc(size * sizeof(signed short));
 
 	//read buffer
-	fread(buf, sizeof(uint8_t), size, filepoint);
+	fread(buf, sizeof(int8_t), size, filepoint);
 	//std::cout << size << std::endl;
 	int blocks = size / 1024;			// calculate the amount of blocks needed
 	//std::cout << blocks << std::endl;
@@ -101,8 +128,7 @@ Block* getBlock(FILE* filepoint, int blockNr, Block *block)
 	signed short* blockBuf = (signed short*)malloc(size);
 	signed short temp1;
 
-	for (int sectionIndex = beginBuf; sectionIndex < endBuf; sectionIndex++) {
-
+	for (int sectionIndex = beginBuf; sectionIndex < endBuf; sectionIndex = sectionIndex + 2) {
 		//convert to signed short:
 		temp1 = buf[sectionIndex] | buf[sectionIndex + 1] << 8;
 		f[sectionIndex / 2] = (signed short)temp1 / (signed short)32767;
@@ -127,6 +153,38 @@ Block* getBlock(FILE* filepoint, int blockNr, Block *block)
 	return block;
 }
 
+FILE* outputFile(string outputLocation) {
+	errno_t err;
+	//you_and_i.pcm
+	//inputLocation = "you_and_i.pcm";
+	if ((err = fopen_s(&outputfilepoint, outputLocation.c_str(), "w")) != 0) { // open the file
+	// File could not be opened. filepoint was set to NULL
+	// error code is returned in err.
+	// error message can be retrieved with strerror(err);
+		fprintf(stderr, "cannot open file '%s': %s\n",
+			"output.pcm", strerror(err));
+	}
+	else {
+		std::cout << "open file" << std::endl;;
+	}
+	int size = fileSize;
+	outputBuf = (signed short *)malloc(fileSize);
+	return outputfilepoint;
+}
+
+void fillBuff(Block* block) {
+	int currentOrderNr = block->orderNr;
+	//cout << currentOrderNr;
+	int offset = currentOrderNr * 1024;
+	for (int i = 0; i < 1024; i++) {
+		outputBuf[offset + i] = block->sample[i];
+	}
+	
+}
+
+void writeFile() {
+	fwrite(outputBuf, sizeof(signed short), fileSize / 2, outputfilepoint);
+}
 
 void equalizer(signed short x[1024], char channel) {
 	signed short y[1024];
@@ -144,6 +202,7 @@ void equalizer(signed short x[1024], char channel) {
 	}
 	x = y;
 }
+
 
 class Queue
 {
@@ -277,11 +336,13 @@ public:
 		*block = outputBuffer[outputPos];
 		cout << "OUTPUT " << block->orderNr << endl;
 		// OUTPUT SCHRIJVEN
-
+		fillBuff(block);
+		if (block->orderNr == 260) {
+			//runningFlag = 0;
+		}
 		outputPos = (outputPos + 1) % BUFLEN;
 		countBass--;
-		//countOutput++;
-		cout << "block ordernummer:  " << block->orderNr << "  block sample: " << block->sample[2] << endl;
+
 		SetEvent(canInput);	// set next step (input, because the queue is smaller
 		ResetEvent(canOutput);	// reset current step
 		delete block;
@@ -296,7 +357,7 @@ Queue queue;
 
 DWORD WINAPI input(void* arg)
 {
-	while (1) {
+	while (runningFlag) {
 		queue.input();
 	}
 	return 0;
@@ -304,7 +365,7 @@ DWORD WINAPI input(void* arg)
 
 DWORD WINAPI treble(void* arg)
 {
-	while (1){
+	while (runningFlag){
 		queue.treble();
 	}
 	return 0;
@@ -312,7 +373,7 @@ DWORD WINAPI treble(void* arg)
 
 DWORD WINAPI bass(void* arg)
 {
-	while (1){
+	while (runningFlag){
 		queue.bass();
 	}
 	return 0;
@@ -320,7 +381,7 @@ DWORD WINAPI bass(void* arg)
 
 DWORD WINAPI output(void* arg)
 {
-	while (1){
+	while (runningFlag){
 		queue.output();
 	}
 	return 0;
@@ -331,26 +392,6 @@ void calculateCoefficients(int bassIntensity, int trebleIntensity) {
 	trebleCoefficients(trebleIntensity, &tb0, &tb1, &tb2, &ta1, &ta2);
 }
 
-FILE* inputFile(string inputLocation)
-{
-	errno_t err;
-
-	//you_and_i.pcm
-	//inputLocation = "you_and_i.pcm";
-	if ((err = fopen_s(&filepoint, inputLocation.c_str() , "r")) != 0) { // open the file
-	// File could not be opened. filepoint was set to NULL
-	// error code is returned in err.
-	// error message can be retrieved with strerror(err);
-	fprintf(stderr, "cannot open file '%s': %s\n",
-		"you_and_i.pcm", strerror(err));
-	}
-	else {
-		std::cout << "open file" << std::endl;;
-	}
-	fseek(filepoint, 0, SEEK_END);
-	fileSize = ftell(filepoint) * 10;
-	return filepoint;
-}
 
 
 int _tmain(int argc, _TCHAR* argv[]){
@@ -399,6 +440,7 @@ int _tmain(int argc, _TCHAR* argv[]){
 	cout << amountOfThreads << " " << lowFrequencySetting << " " << highFrequencySetting << " " << inputLocation << " " << outputLocation << endl;
 	inputLocation = "you_and_i.pcm";
 	FILE * filepoint = inputFile(inputLocation);
+	FILE* outputfilepoint = outputFile(outputLocation);
 
 	_TCHAR threads = 10;// amountOfThreads;// *argv[0];	// number of threads
 	_TCHAR basslv = lowFrequencySetting;// *argv[1];	// bass intensity
@@ -406,18 +448,14 @@ int _tmain(int argc, _TCHAR* argv[]){
 	//_TCHAR inputFile = *argv[3];
 	//_TCHAR outputFile = *argv[4];
 	calculateCoefficients(basslv, treblelv);
-
+	blockAmount = fileSize / 1024;
 	for (int i = 0; i < threads; i++) {
 		CreateThread(0, 0, input, nullptr, 0, 0);
 		CreateThread(0, 0, treble, nullptr, 0, 0);
 		CreateThread(0, 0, bass, nullptr, 0, 0);
 		CreateThread(0, 0, output, nullptr, 0, 0);
 	}
-
-	// Druk op een toets om af te breken...
-	//delete(queue);
 	cin.get();
+	writeFile();
 	return 0;
 }
-
-
