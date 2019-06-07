@@ -103,10 +103,10 @@ FILE* inputFile(string inputLocation)
 		std::cout << "open file" << std::endl;;
 	}
 	fseek(filepoint, 0, SEEK_END);
-	fileSize = ftell(filepoint) / 2;
-
+	fileSize = ftell(filepoint); // size in bytes
+	blockAmount = fileSize / 2 / 1024;
 	inputBuf = (signed short *)malloc(fileSize);
-	fread(inputBuf, sizeof(signed short), fileSize, filepoint);
+	fread(inputBuf, sizeof(signed short), fileSize / 2, filepoint);
 
 	return filepoint;
 }
@@ -114,7 +114,7 @@ FILE* inputFile(string inputLocation)
 Block* getBlock(FILE* filepoint, int blockNr, Block *block)
 {
 	int size = fileSize;
-	int blocks = size / 1024;			// calculate the amount of blocks needed
+	int blocks = size / 1024 / 2;			// calculate the amount of blocks needed
 
 	// creates the block
 	int beginBuf = blockNr * 1024;			// the begin index for the new block
@@ -159,7 +159,7 @@ void fillBuff(Block* block) {
 }
 
 void writeFile() {
-	fwrite(outputBuf, sizeof(signed short), fileSize / 2, outputfilepoint);
+	fwrite(outputBuf, sizeof(signed short), fileSize / 2, outputfilepoint); // division by 2 because 2 bytes are used per entity
 }
 
 void equalizer(signed short x[1024], char channel) {
@@ -223,9 +223,14 @@ public:
 			EnterCriticalSection(&busy);
 		}
 		Block* block = new Block;
-		block = getBlock(filepoint, orderCount, block);
+		if (orderCount < blockAmount - 1) {
+			block = getBlock(filepoint, orderCount, block);
 
-		block->orderNr = orderCount; // om de positie van het block in het geluidsfragment te onthouden
+			block->orderNr = orderCount; // om de positie van het block in het geluidsfragment te onthouden
+		}
+		else {
+			runningFlag = 0;
+		}
 		orderCount++;
 		cout << "INPUT " << block->orderNr << endl;
 
@@ -239,7 +244,6 @@ public:
 		SetEvent(canTreble);	// set next step
 		ResetEvent(canInput);	// reset current step
 		LeaveCriticalSection(&busy);
-
 		//return block;
 	}
 
@@ -424,7 +428,7 @@ int _tmain(int argc, _TCHAR* argv[]) {
 	//_TCHAR inputFile = *argv[3];
 	//_TCHAR outputFile = *argv[4];
 	calculateCoefficients(basslv, treblelv);
-	blockAmount = fileSize / 1024;
+	//blockAmount = fileSize / 1024;
 	for (int i = 0; i < threads; i++) {
 		CreateThread(0, 0, input, nullptr, 0, 0);
 		CreateThread(0, 0, treble, nullptr, 0, 0);
