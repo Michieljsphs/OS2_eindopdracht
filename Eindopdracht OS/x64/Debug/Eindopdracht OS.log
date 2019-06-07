@@ -1,4 +1,4 @@
 ﻿  main.cpp
-C:\Users\michi\OneDrive\Documenten\Gitkraken directory\OS2_eindopdracht\Eindopdracht OS\main.cpp(194): warning C4244: '=': conversion from 'double' to 'short', possible loss of data
-C:\Users\michi\OneDrive\Documenten\Gitkraken directory\OS2_eindopdracht\Eindopdracht OS\main.cpp(200): warning C4244: '=': conversion from 'double' to 'short', possible loss of data
-  Eindopdracht OS.vcxproj -> C:\Users\michi\OneDrive\Documenten\Gitkraken directory\OS2_eindopdracht\Eindopdracht OS\x64\Debug\Eindopdracht OS.exe
+\\mac\home\onedrive - avans hogeschool\avans\jaar 2\blok 4\project\os2_eindopdracht2\eindopdracht os\main.cpp(171): warning C4244: '=': conversion from 'double' to 'short', possible loss of data
+\\mac\home\onedrive - avans hogeschool\avans\jaar 2\blok 4\project\os2_eindopdracht2\eindopdracht os\main.cpp(177): warning C4244: '=': conversion from 'double' to 'short', possible loss of data
+  Eindopdracht OS.vcxproj -> \\Mac\Home\OneDrive - Avans Hogeschool\Avans\Jaar 2\Blok 4\Project\OS2_eindopdracht2\Eindopdracht OS\x64\Debug\Eindopdracht OS.exe

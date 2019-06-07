@@ -1,3 +1,4 @@
+using namespace std;
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
@@ -8,16 +9,18 @@
 #include <thread>
 #include <math.h>
 #include <string>
+#include <vector>
 
 FILE* filepoint;
-FILE* outputfilepoint; 
+FILE* outputfilepoint;
 signed short* outputBuf;
+signed short* inputBuf ;
 
 bool runningFlag = 1;
-using namespace std;
+
 const int BUFLEN = 5; // aantal in de queue
 double bb0, bb1, bb2, ba1, ba2;
-double tb0 , tb1, tb2, ta1, ta2;
+double tb0, tb1, tb2, ta1, ta2;
 int fileSize;
 int outputOrder = 0;
 int blockAmount = 0;
@@ -75,7 +78,7 @@ public:
 		}
 	}
 	~Block() {
-		
+
 	}
 	signed int orderNr;
 	signed short sample[1024];
@@ -101,55 +104,28 @@ FILE* inputFile(string inputLocation)
 	}
 	fseek(filepoint, 0, SEEK_END);
 	fileSize = ftell(filepoint) / 2;
+
+	inputBuf = (signed short *)malloc(fileSize);
+	fread(inputBuf, sizeof(signed short), fileSize, filepoint);
+
 	return filepoint;
 }
 
 Block* getBlock(FILE* filepoint, int blockNr, Block *block)
 {
 	int size = fileSize;
-	// File was opened, filepoint can be used to read the stream.
-	
-	fseek(filepoint, 0, SEEK_SET);
-	int16_t* buf = (int16_t*)malloc(size);
-	signed short* f = (signed short*)malloc(size * sizeof(signed short));
-
-	//read buffer
-	fread(buf, sizeof(int8_t), size, filepoint);
-	//std::cout << size << std::endl;
 	int blocks = size / 1024;			// calculate the amount of blocks needed
-	//std::cout << blocks << std::endl;
 
 	// creates the block
 	int beginBuf = blockNr * 1024;			// the begin index for the new block
 	int endBuf = (blockNr + 1) * 1024 - 1;	// the last index for the new block
-	//std::cout << beginBuf << " - " << endBuf << std::endl;
 
-	int newBufIndex = 0;
-	signed short* blockBuf = (signed short*)malloc(size);
-	signed short temp1;
-
-	for (int sectionIndex = beginBuf; sectionIndex < endBuf; sectionIndex = sectionIndex + 2) {
-		//convert to signed short:
-		temp1 = buf[sectionIndex] | buf[sectionIndex + 1] << 8;
-		f[sectionIndex / 2] = (signed short)temp1 / (signed short)32767;
-		if (f[sectionIndex / 2] > 1)
-			f[sectionIndex / 2] = 1;
-		if (f[sectionIndex / 2] < -1)
-			f[sectionIndex / 2] = -1;
-
-		// put signed short into new buffer
-		blockBuf[newBufIndex] = temp1;
-		//std::cout << blockBuf[newBufIndex] << std::endl;
-
-		newBufIndex++;
+	int x = 0;
+	for (int i = beginBuf; i < endBuf; i++) {
+		block->sample[x] = inputBuf[i];
+		x++;
 	}
-
-	//cout << blockBuf[50] << endl;
-	for (int i = 0; i < 1024; i++) block->sample[i] = blockBuf[i];
-	//cout << *block->sample[50];
-	free(blockBuf);
-	free(f);
-	free(buf);
+	//cout << "block nr " << blockNr << " beginBuf = " << beginBuf << " endBuf = " << endBuf << endl;
 	return block;
 }
 
@@ -179,7 +155,7 @@ void fillBuff(Block* block) {
 	for (int i = 0; i < 1024; i++) {
 		outputBuf[offset + i] = block->sample[i];
 	}
-	
+
 }
 
 void writeFile() {
@@ -232,7 +208,7 @@ public:
 		sample = 0;
 		count = 0;
 		orderCount = 0;
-		countInput = 0, countTreble = 0, countBass = 0, countOutput  = 0;
+		countInput = 0, countTreble = 0, countBass = 0, countOutput = 0;
 		//bufferPart = BUFLEN / 4;
 		inputPos = 0, treblePos = 0, bassPos = 0, outputPos = 0;
 
@@ -252,13 +228,13 @@ public:
 		block->orderNr = orderCount; // om de positie van het block in het geluidsfragment te onthouden
 		orderCount++;
 		cout << "INPUT " << block->orderNr << endl;
-		
+
 		// stop block in de buffer op de plek van treblePos
 		trebleBuffer[inputPos] = *block;
 		delete block;
 		// inputPos aanpassen
 		inputPos = (inputPos + 1) % BUFLEN;
-		
+
 		countInput++;
 		SetEvent(canTreble);	// set next step
 		ResetEvent(canInput);	// reset current step
@@ -275,7 +251,7 @@ public:
 			WaitForSingleObject(canTreble, INFINITE);
 			EnterCriticalSection(&busy);
 		}
-		
+
 		Block* block = new Block;
 		*block = trebleBuffer[treblePos];
 
@@ -331,7 +307,7 @@ public:
 			WaitForSingleObject(canOutput, INFINITE);
 			EnterCriticalSection(&busy);
 		}
-		
+
 		Block* block = new Block;
 		*block = outputBuffer[outputPos];
 		cout << "OUTPUT " << block->orderNr << endl;
@@ -365,7 +341,7 @@ DWORD WINAPI input(void* arg)
 
 DWORD WINAPI treble(void* arg)
 {
-	while (runningFlag){
+	while (runningFlag) {
 		queue.treble();
 	}
 	return 0;
@@ -373,7 +349,7 @@ DWORD WINAPI treble(void* arg)
 
 DWORD WINAPI bass(void* arg)
 {
-	while (runningFlag){
+	while (runningFlag) {
 		queue.bass();
 	}
 	return 0;
@@ -381,7 +357,7 @@ DWORD WINAPI bass(void* arg)
 
 DWORD WINAPI output(void* arg)
 {
-	while (runningFlag){
+	while (runningFlag) {
 		queue.output();
 	}
 	return 0;
@@ -394,7 +370,7 @@ void calculateCoefficients(int bassIntensity, int trebleIntensity) {
 
 
 
-int _tmain(int argc, _TCHAR* argv[]){
+int _tmain(int argc, _TCHAR* argv[]) {
 	int amountOfThreads = 0, lowFrequencySetting = 0, highFrequencySetting = 0;
 	string inputLocation = "temp1", outputLocation = "temp2";
 	int fileCounter = 0;
