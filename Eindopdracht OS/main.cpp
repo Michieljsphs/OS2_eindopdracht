@@ -115,7 +115,7 @@ FILE* inputFile(string inputLocation)
 Block* getBlock(FILE* filepoint, int blockNr, Block *block)
 {
 	int size = fileSize;
-	int blocks = size / 1024 / 2;			// calculate the amount of blocks needed
+	//int blocks = size / 1024 / 2;			// calculate the amount of blocks needed
 
 	// creates the block
 	int beginBuf = blockNr * 1024;			// the begin index for the new block
@@ -380,43 +380,47 @@ int _tmain(int argc, _TCHAR* argv[]) {
 	string inputLocation = "temp1", outputLocation = "temp2";
 	int fileCounter = 0;
 
+	if (argc <= 6) {
+		for (int argcCount = 1; argcCount < argc; argcCount++) {
 
-	for (int argcCount = 1; argcCount < argc; argcCount++) {
-		std::string argvStr = argv[argcCount];
-		const char* str = argv[argcCount];
+			std::string argvStr = argv[argcCount];
+			const char* str = argv[argcCount];
 
 
-		cout << argcCount << " - " << endl;
-		printf("%s\n", argvStr.c_str());
-		std::size_t found;
-		if (argvStr.find("-p") == 0) {
+			cout << argcCount << " - " << endl;
+			printf("%s\n", argvStr.c_str());
+			std::size_t found;
 
-			found = argvStr.find(":");
-			amountOfThreads = stoi(argvStr.substr((found + 1), argvStr.size()));
-		}
-		else if (argvStr.find("-b") == 0) {
-			found = argvStr.find(":");
-			lowFrequencySetting = stoi(argvStr.substr((found + 1), argvStr.size()));
-		}
-		else if (argvStr.find("-t") == 0) {
-			found = argvStr.find(":");
-			highFrequencySetting = stoi(argvStr.substr((found + 1), argvStr.size()));
-		}
-		else if (argvStr.find(".") != std::string::npos) {
-			if (fileCounter < 1) {
-				inputLocation = argvStr;
+			if (argvStr.find("-p") == 0) {
+
+				found = argvStr.find(":");
+				amountOfThreads = stoi(argvStr.substr((found + 1), argvStr.size()));
 			}
-			else if (fileCounter < 2) {
-				outputLocation = argvStr;
+			else if (argvStr.find("-b") == 0) {
+				found = argvStr.find(":");
+				lowFrequencySetting = stoi(argvStr.substr((found + 1), argvStr.size()));
+			}
+			else if (argvStr.find("-t") == 0) {
+				found = argvStr.find(":");
+				highFrequencySetting = stoi(argvStr.substr((found + 1), argvStr.size()));
+			}
+			else if (argvStr.find(".") != std::string::npos) {
+				if (fileCounter < 1) {
+					inputLocation = argvStr;
+				}
+				else if (fileCounter < 2) {
+					outputLocation = argvStr;
+				}
+				
+				fileCounter++;
 			}
 			else {
-				//error
+				cout << "Error wrong use of arguments. Allowed parameters are -p:(1 to 8), -b:(-6 to 6), -t:(-6 to 6), inputfilePath.pcm, outputfilePath.pcm" << endl;
 			}
-			fileCounter++;
 		}
-		else {
-			cout << "Parameter" << endl;
-		}
+	}
+	else {
+		cout << "to many arguments";
 	}
 	cout << amountOfThreads << " " << lowFrequencySetting << " " << highFrequencySetting << " " << inputLocation << " " << outputLocation << endl;
 	inputLocation = "you_and_i.pcm";
@@ -437,6 +441,7 @@ int _tmain(int argc, _TCHAR* argv[]) {
 		CreateThread(0, 0, output, nullptr, 0, 0);
 	}
 	cin.get();
+	cout << "write File";
 	writeFile();
 	return 0;
 }
