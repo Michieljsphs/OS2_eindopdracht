@@ -14,8 +14,11 @@ using namespace std;
 
 FILE* filepoint;
 FILE* outputfilepoint;
-signed short* outputBuf;
-signed short* inputBuf ;
+//signed short* outputBuf;
+//signed short* inputBuf;
+vector<signed short>* buf;
+vector<signed short>* outputBuf;
+
 
 bool runningFlag = 1;
 
@@ -23,14 +26,15 @@ const int BUFLEN = 5; // aantal in de queue
 double bb0, bb1, bb2, ba1, ba2;
 double tb0, tb1, tb2, ta1, ta2;
 int fileSize;
+int bufSize;
 int outputOrder = 0;
 int blockAmount = 0;
 
 void bassCoefficients(int intensity, double* b0, double* b1, double* b2, double* a1, double* a2)
 {
 	double frequency = 330;
-	double qFactor = 0.5;
-	double gain = intensity;
+	double qFactor = 0.5; \
+		double gain = intensity;
 	double sampleRate = 44100;
 
 	double pi = 4.0 * atan(1);
@@ -88,10 +92,10 @@ public:
 void writeFile(string filename, vector<signed short> buf) {
 	//fwrite(outputBuf, sizeof(signed short), fileSize / 2, outputfilepoint); // division by 2 because 2 bytes are used per entity
 	ofstream outfile(filename, ios::out | ios::binary);
-	outfile.write((const char*)&buf[0], buf.size());
+	outfile.write((const char*)& buf[0], bufSize * 2);
 }
 
-FILE* inputFile(string inputLocation)
+void inputFile(string inputLocation)
 {
 	//errno_t err;
 
@@ -123,15 +127,16 @@ FILE* inputFile(string inputLocation)
 
 	cout << N << " - " << endl;
 
-	std::vector<signed short> buf(N / sizeof(signed short));// reserve space for N/8 doubles
-	is.read(reinterpret_cast<char*>(buf.data()), buf.size() * sizeof(signed short));
-	int amountOfBlocks = buf.size() / 1024;
+	buf = new std::vector<signed short>(N / sizeof(signed short));// reserve space for N/8 doubles
+	bufSize = buf->size();
+	is.read(reinterpret_cast<char*>(buf->data()), bufSize * sizeof(signed short));
+	blockAmount = bufSize / 1024;
 	// checks if the vector is empty or not 
-	if (buf.empty() == false) {
+	if (buf->empty() == false) {
 		cout << "\nVector is not empty";
 		// prints the vector size after resize() 
-		cout << "\nSize : " << buf.size() << " - Blocks : " << amountOfBlocks << endl;
-		
+		cout << "\nSize : " << bufSize << " - Blocks : " << blockAmount << endl;
+
 	}
 	else {
 		cout << "\nVector is empty";
@@ -143,14 +148,13 @@ FILE* inputFile(string inputLocation)
 	}*/
 
 
-	writeFile("output2.pcm", buf);
-	return 0;
+	writeFile("output.pcm", *buf);
 	//return filepoint;
 }
 
-Block* getBlock(FILE* filepoint, int blockNr, Block *block)
+Block* getBlock(int blockNr, Block* block)
 {
-	int size = fileSize;
+	//int size = fileSize;
 	//int blocks = size / 1024 / 2;			// calculate the amount of blocks needed
 
 	// creates the block
@@ -158,8 +162,10 @@ Block* getBlock(FILE* filepoint, int blockNr, Block *block)
 	int endBuf = (blockNr + 1) * 1024 - 1;	// the last index for the new block
 
 	int x = 0;
+	//cout << "blockNr: " << blockNr << endl;
 	for (int i = beginBuf; i < endBuf; i++) {
-		block->sample[x] = inputBuf[i];
+		block->sample[x] = buf->at(i);
+
 		x++;
 	}
 	//cout << "block nr " << blockNr << " beginBuf = " << beginBuf << " endBuf = " << endBuf << endl;
@@ -181,7 +187,7 @@ FILE* outputFile(string outputLocation) {
 		std::cout << "open file" << std::endl;;
 	}
 	int size = fileSize;
-	outputBuf = (signed short *)malloc(fileSize);
+
 	return outputfilepoint;
 }
 
@@ -189,9 +195,7 @@ void fillBuff(Block* block) {
 	int currentOrderNr = block->orderNr;
 	//cout << currentOrderNr;
 	int offset = currentOrderNr * 1024;
-	for (int i = 0; i < 1024; i++) {
-		outputBuf[offset + i] = block->sample[i];
-	}
+	outputBuf->insert(outputBuf->begin() + offset, block->sample, block->sample + 1024);
 
 }
 
@@ -258,7 +262,7 @@ public:
 		}
 		Block* block = new Block;
 		if (orderCount < blockAmount - 1) {
-			block = getBlock(filepoint, orderCount, block);
+			block = getBlock(orderCount, block);
 
 			block->orderNr = orderCount; // om de positie van het block in het geluidsfragment te onthouden
 		}
@@ -428,14 +432,35 @@ int _tmain(int argc, _TCHAR* argv[]) {
 
 				found = argvStr.find(":");
 				amountOfThreads = stoi(argvStr.substr((found + 1), argvStr.size()));
+				if (amountOfThreads >= 1 && amountOfThreads <= 8) {
+					cout << "amount of threads "<< amountOfThreads << endl;
+				}
+				else {
+					cout << "amount of threads are not allowed. range is 1 to 8 " << endl;
+					amountOfThreads = 1;
+				}
 			}
 			else if (argvStr.find("-b") == 0) {
 				found = argvStr.find(":");
 				lowFrequencySetting = stoi(argvStr.substr((found + 1), argvStr.size()));
+				if (lowFrequencySetting >= -6 && lowFrequencySetting <= 6) {
+					cout << "amount of bass " << lowFrequencySetting << endl;
+				}
+				else {
+					cout << "amount of bass is not allowed. range is -6 to 6 " << endl;
+					lowFrequencySetting = 0;
+				}
 			}
 			else if (argvStr.find("-t") == 0) {
 				found = argvStr.find(":");
 				highFrequencySetting = stoi(argvStr.substr((found + 1), argvStr.size()));
+				if (highFrequencySetting >= -6 && highFrequencySetting <= 6) {
+					cout << "amount of treble " << highFrequencySetting << endl;
+				}
+				else {
+					cout << "amount of treble is not allowed. range is -6 to 6 " << endl;
+					highFrequencySetting = 0;
+				}
 			}
 			else if (argvStr.find(".") != std::string::npos) {
 				if (fileCounter < 1) {
@@ -444,7 +469,7 @@ int _tmain(int argc, _TCHAR* argv[]) {
 				else if (fileCounter < 2) {
 					outputLocation = argvStr;
 				}
-				
+
 				fileCounter++;
 			}
 			else {
@@ -457,10 +482,10 @@ int _tmain(int argc, _TCHAR* argv[]) {
 	}
 	cout << amountOfThreads << " " << lowFrequencySetting << " " << highFrequencySetting << " " << inputLocation << " " << outputLocation << endl;
 	inputLocation = "you_and_i.pcm";
-	FILE * filepoint = inputFile(inputLocation);
-	FILE* outputfilepoint = outputFile(outputLocation);
-
-	_TCHAR threads = 10;// amountOfThreads;// *argv[0];	// number of threads
+	inputFile(inputLocation);
+	//FILE* outputfilepoint = outputFile(outputLocation);
+	outputBuf = new std::vector<signed short>(bufSize);
+	_TCHAR threads = amountOfThreads;// amountOfThreads;// *argv[0];	// number of threads
 	_TCHAR basslv = lowFrequencySetting;// *argv[1];	// bass intensity
 	_TCHAR treblelv = highFrequencySetting;// *argv[2];	// treble intensity
 	//_TCHAR inputFile = *argv[3];
@@ -475,6 +500,6 @@ int _tmain(int argc, _TCHAR* argv[]) {
 	}
 	cin.get();
 	cout << "write File";
-	//writeFile();
+	writeFile("output2.pcm", *outputBuf);
 	return 0;
 }

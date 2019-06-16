@@ -1,6 +1,6 @@
 ﻿  main.cpp
-z:\onedrive - avans hogeschool\avans\jaar 2\blok 4\project\os2_eindopdracht2\eindopdracht os\main.cpp(120): warning C4244: 'initializing': conversion from 'std::streamoff' to 'int', possible loss of data
-z:\onedrive - avans hogeschool\avans\jaar 2\blok 4\project\os2_eindopdracht2\eindopdracht os\main.cpp(128): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-z:\onedrive - avans hogeschool\avans\jaar 2\blok 4\project\os2_eindopdracht2\eindopdracht os\main.cpp(204): warning C4244: '=': conversion from 'double' to 'short', possible loss of data
-z:\onedrive - avans hogeschool\avans\jaar 2\blok 4\project\os2_eindopdracht2\eindopdracht os\main.cpp(210): warning C4244: '=': conversion from 'double' to 'short', possible loss of data
+z:\onedrive - avans hogeschool\avans\jaar 2\blok 4\project\os2_eindopdracht2\eindopdracht os\main.cpp(124): warning C4244: 'initializing': conversion from 'std::streamoff' to 'int', possible loss of data
+z:\onedrive - avans hogeschool\avans\jaar 2\blok 4\project\os2_eindopdracht2\eindopdracht os\main.cpp(131): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+z:\onedrive - avans hogeschool\avans\jaar 2\blok 4\project\os2_eindopdracht2\eindopdracht os\main.cpp(208): warning C4244: '=': conversion from 'double' to 'short', possible loss of data
+z:\onedrive - avans hogeschool\avans\jaar 2\blok 4\project\os2_eindopdracht2\eindopdracht os\main.cpp(214): warning C4244: '=': conversion from 'double' to 'short', possible loss of data
   Eindopdracht OS.vcxproj -> Z:\OneDrive - Avans Hogeschool\Avans\Jaar 2\Blok 4\Project\OS2_eindopdracht2\Eindopdracht OS\x64\Debug\Eindopdracht OS.exe
