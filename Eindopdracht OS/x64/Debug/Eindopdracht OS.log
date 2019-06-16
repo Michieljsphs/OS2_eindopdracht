@@ -1,6 +1,10 @@
 ﻿  main.cpp
-z:\onedrive - avans hogeschool\avans\jaar 2\blok 4\project\os2_eindopdracht2\eindopdracht os\main.cpp(124): warning C4244: 'initializing': conversion from 'std::streamoff' to 'int', possible loss of data
-z:\onedrive - avans hogeschool\avans\jaar 2\blok 4\project\os2_eindopdracht2\eindopdracht os\main.cpp(131): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-z:\onedrive - avans hogeschool\avans\jaar 2\blok 4\project\os2_eindopdracht2\eindopdracht os\main.cpp(208): warning C4244: '=': conversion from 'double' to 'short', possible loss of data
-z:\onedrive - avans hogeschool\avans\jaar 2\blok 4\project\os2_eindopdracht2\eindopdracht os\main.cpp(214): warning C4244: '=': conversion from 'double' to 'short', possible loss of data
-  Eindopdracht OS.vcxproj -> Z:\OneDrive - Avans Hogeschool\Avans\Jaar 2\Blok 4\Project\OS2_eindopdracht2\Eindopdracht OS\x64\Debug\Eindopdracht OS.exe
+C:\Users\michi\OneDrive\Documenten\Gitkraken directory\OS2_eindopdracht\Eindopdracht OS\main.cpp(124,8): warning C4244:  'initializing': conversion from 'std::streamoff' to 'int', possible loss of data
+C:\Users\michi\OneDrive\Documenten\Gitkraken directory\OS2_eindopdracht\Eindopdracht OS\main.cpp(131,23): warning C4267:  '=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\michi\OneDrive\Documenten\Gitkraken directory\OS2_eindopdracht\Eindopdracht OS\main.cpp(183,19): warning C4473:  'fprintf' : not enough arguments passed for format string
+C:\Users\michi\OneDrive\Documenten\Gitkraken directory\OS2_eindopdracht\Eindopdracht OS\main.cpp(183,19): message :  placeholders and their parameters expect 2 variadic arguments, but 1 were provided
+C:\Users\michi\OneDrive\Documenten\Gitkraken directory\OS2_eindopdracht\Eindopdracht OS\main.cpp(183,19): message :  the missing variadic argument 2 is required by format string '%s'
+C:\Users\michi\OneDrive\Documenten\Gitkraken directory\OS2_eindopdracht\Eindopdracht OS\main.cpp(208,73): warning C4244:  '=': conversion from 'double' to 'short', possible loss of data
+C:\Users\michi\OneDrive\Documenten\Gitkraken directory\OS2_eindopdracht\Eindopdracht OS\main.cpp(214,73): warning C4244:  '=': conversion from 'double' to 'short', possible loss of data
+  LINK : C:\Users\michi\OneDrive\Documenten\Gitkraken directory\OS2_eindopdracht\Eindopdracht OS\x64\Debug\Eindopdracht OS.exe not found or not built by the last incremental link; performing full link
+  Eindopdracht OS.vcxproj -> C:\Users\michi\OneDrive\Documenten\Gitkraken directory\OS2_eindopdracht\Eindopdracht OS\x64\Debug\Eindopdracht OS.exe

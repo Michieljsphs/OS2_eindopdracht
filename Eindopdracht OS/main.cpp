@@ -148,7 +148,7 @@ void inputFile(string inputLocation)
 	}*/
 
 
-	writeFile("output.pcm", *buf);
+	//writeFile("output.pcm", *buf);
 	//return filepoint;
 }
 
@@ -181,7 +181,7 @@ FILE* outputFile(string outputLocation) {
 	// error code is returned in err.
 	// error message can be retrieved with strerror(err);
 		fprintf(stderr, "cannot open file '%s': %s\n",
-			"output.pcm", strerror(err));
+			strerror(err));
 	}
 	else {
 		std::cout << "open file" << std::endl;;
@@ -481,7 +481,7 @@ int _tmain(int argc, _TCHAR* argv[]) {
 		cout << "to many arguments";
 	}
 	cout << amountOfThreads << " " << lowFrequencySetting << " " << highFrequencySetting << " " << inputLocation << " " << outputLocation << endl;
-	inputLocation = "you_and_i.pcm";
+	//inputLocation = "you_and_i.pcm";
 	inputFile(inputLocation);
 	//FILE* outputfilepoint = outputFile(outputLocation);
 	outputBuf = new std::vector<signed short>(bufSize);
@@ -499,7 +499,7 @@ int _tmain(int argc, _TCHAR* argv[]) {
 		CreateThread(0, 0, output, nullptr, 0, 0);
 	}
 	cin.get();
-	cout << "write File";
-	writeFile("output2.pcm", *outputBuf);
+	cout << "write File" << outputLocation;
+	writeFile(outputLocation, *outputBuf);
 	return 0;
 }
