@@ -105,8 +105,9 @@ FILE* inputFile(string inputLocation)
 	fseek(filepoint, 0, SEEK_END);
 	fileSize = ftell(filepoint); // size in bytes
 	blockAmount = fileSize / 2 / 1024;
-	inputBuf = (signed short *)malloc(fileSize);
-	fread(inputBuf, sizeof(signed short), fileSize / 2, filepoint);
+	inputBuf = (signed short *)malloc(sizeof(signed short) * fileSize);
+	rewind(filepoint);
+	fread(inputBuf, sizeof(signed short), fileSize, filepoint);
 
 	return filepoint;
 }
