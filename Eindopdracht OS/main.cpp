@@ -10,6 +10,7 @@ using namespace std;
 #include <math.h>
 #include <string>
 #include <vector>
+#include <iterator>
 
 FILE* filepoint;
 FILE* outputfilepoint;
@@ -84,32 +85,67 @@ public:
 	signed short sample[1024];
 };
 
-
+void writeFile(string filename, vector<signed short> buf) {
+	//fwrite(outputBuf, sizeof(signed short), fileSize / 2, outputfilepoint); // division by 2 because 2 bytes are used per entity
+	ofstream outfile(filename, ios::out | ios::binary);
+	outfile.write((const char*)&buf[0], buf.size());
+}
 
 FILE* inputFile(string inputLocation)
 {
-	errno_t err;
+	//errno_t err;
 
-	//you_and_i.pcm
-	//inputLocation = "you_and_i.pcm";
-	if ((err = fopen_s(&filepoint, inputLocation.c_str(), "r")) != 0) { // open the file
-	// File could not be opened. filepoint was set to NULL
-	// error code is returned in err.
-	// error message can be retrieved with strerror(err);
-		fprintf(stderr, "cannot open file '%s': %s\n",
-			"you_and_i.pcm", strerror(err));
+	////you_and_i.pcm
+	////inputLocation = "you_and_i.pcm";
+	//if ((err = fopen_s(&filepoint, inputLocation.c_str(), "r")) != 0) { // open the file
+	//// File could not be opened. filepoint was set to NULL
+	//// error code is returned in err.
+	//// error message can be retrieved with strerror(err);
+	//	fprintf(stderr, "cannot open file '%s': %s\n",
+	//		"you_and_i.pcm", strerror(err));
+	//}
+	//else {
+	//	std::cout << "open file" << std::endl;;
+	//}
+	//fseek(filepoint, 0, SEEK_END);
+	//fileSize = ftell(filepoint); // size in bytes
+	//blockAmount = fileSize / 2 / 1024;
+	//inputBuf = (signed short *)malloc(sizeof(signed short) * fileSize);
+	//rewind(filepoint);
+	//fread(inputBuf, sizeof(signed short), fileSize, filepoint);
+
+	///////
+	ifstream is(inputLocation, ios_base::binary);
+	is.seekg(0, is.end);     //N is the total number of doubles
+	int N = is.tellg();
+	is.seekg(0, is.beg);
+
+
+	cout << N << " - " << endl;
+
+	std::vector<signed short> buf(N / sizeof(signed short));// reserve space for N/8 doubles
+	is.read(reinterpret_cast<char*>(buf.data()), buf.size() * sizeof(signed short));
+	int amountOfBlocks = buf.size() / 1024;
+	// checks if the vector is empty or not 
+	if (buf.empty() == false) {
+		cout << "\nVector is not empty";
+		// prints the vector size after resize() 
+		cout << "\nSize : " << buf.size() << " - Blocks : " << amountOfBlocks << endl;
+		
 	}
 	else {
-		std::cout << "open file" << std::endl;;
+		cout << "\nVector is empty";
 	}
-	fseek(filepoint, 0, SEEK_END);
-	fileSize = ftell(filepoint); // size in bytes
-	blockAmount = fileSize / 2 / 1024;
-	inputBuf = (signed short *)malloc(sizeof(signed short) * fileSize);
-	rewind(filepoint);
-	fread(inputBuf, sizeof(signed short), fileSize, filepoint);
 
-	return filepoint;
+
+	/*for (int i = 0; i < buf.size(); i++) {
+		cout << buf.at(i) << endl;
+	}*/
+
+
+	writeFile("output2.pcm", buf);
+	return 0;
+	//return filepoint;
 }
 
 Block* getBlock(FILE* filepoint, int blockNr, Block *block)
@@ -159,9 +195,6 @@ void fillBuff(Block* block) {
 
 }
 
-void writeFile() {
-	fwrite(outputBuf, sizeof(signed short), fileSize / 2, outputfilepoint); // division by 2 because 2 bytes are used per entity
-}
 
 void equalizer(signed short x[1024], char channel) {
 	signed short y[1024];
@@ -442,6 +475,6 @@ int _tmain(int argc, _TCHAR* argv[]) {
 	}
 	cin.get();
 	cout << "write File";
-	writeFile();
+	//writeFile();
 	return 0;
 }
